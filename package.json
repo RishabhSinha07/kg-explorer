@@ -36,7 +36,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/kg-explorer"
+    "url": "https://github.com/RishabhSinha07/kg-explorer"
   },
   "dependencies": {
     "@xyflow/react": "^12.6.0",
