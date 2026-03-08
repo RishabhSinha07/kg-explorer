@@ -211,16 +211,19 @@ export function parseKG(input: string): KnowledgeGraph {
     throw new Error('No valid nodes found in the file. Nodes must have an "id" or "name" field.');
   }
 
-  // Filter edges to only valid references
+  // Filter edges to only valid references and assign stable IDs
   const nodeIds = new Set(nodes.map((n) => n.id));
   const edges: KGEdge[] = [];
-  for (const rawEdge of rawEdges) {
-    const e = rawEdge as KGEdge;
+  for (let i = 0; i < rawEdges.length; i++) {
+    const e = rawEdges[i] as KGEdge;
     if (!nodeIds.has(e.source) || !nodeIds.has(e.target)) {
       console.warn(
         `[kg-explorer] Skipping edge: ${!nodeIds.has(e.source) ? `source '${e.source}'` : `target '${e.target}'`} not found`,
       );
       continue;
+    }
+    if (!e.id) {
+      e.id = `edge-${e.source}-${e.target}-${i}`;
     }
     edges.push(e);
   }

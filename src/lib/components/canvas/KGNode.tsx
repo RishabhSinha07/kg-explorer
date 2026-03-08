@@ -1,5 +1,6 @@
 import { memo, useState, useCallback } from 'react';
 import { Handle, Position, type NodeProps } from '@xyflow/react';
+import { useReadOnly } from '../KGExplorer';
 import { useGraphStore } from '../../store/graph-store';
 import { getNodeLabel, getNodeType, type KGNode as KGNodeType } from '../../types';
 
@@ -12,11 +13,13 @@ function KGNodeComponent({ id, data, selected }: NodeProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editLabel, setEditLabel] = useState(label);
   const updateNodeField = useGraphStore((s) => s.updateNodeField);
+  const readOnly = useReadOnly();
 
   const handleDoubleClick = useCallback(() => {
+    if (readOnly) return;
     setEditLabel(label);
     setIsEditing(true);
-  }, [label]);
+  }, [label, readOnly]);
 
   const handleBlur = useCallback(() => {
     setIsEditing(false);
@@ -44,6 +47,9 @@ function KGNodeComponent({ id, data, selected }: NodeProps) {
 
   return (
     <div
+      role="treeitem"
+      aria-label={`${label}${nodeType !== 'default' ? ` (${nodeType})` : ''}`}
+      aria-selected={selected}
       className={`
         relative min-w-[160px] max-w-[260px] rounded-lg border kg-surface
         shadow-lg transition-all duration-150

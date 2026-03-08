@@ -23,7 +23,7 @@ function kgToFlowNodes(kgNodes: KGNode[], positions?: Map<string, { x: number; y
 
 function kgToFlowEdges(kgEdges: KGEdge[]): Edge[] {
   return kgEdges.map((e, i) => ({
-    id: `e-${e.source}-${e.target}-${i}`,
+    id: e.id ?? `e-${e.source}-${e.target}-${i}`,
     source: e.source,
     target: e.target,
     type: 'kgEdge',
@@ -38,7 +38,7 @@ function flowToKGNodes(nodes: Node[]): KGNode[] {
 }
 
 function flowToKGEdges(edges: Edge[]): KGEdge[] {
-  return edges.map((e) => (e.data?.kg as KGEdge));
+  return edges.filter((e) => e.data?.kg).map((e) => e.data!.kg as KGEdge);
 }
 
 export interface GraphState {
@@ -73,8 +73,9 @@ export interface GraphState {
 }
 
 function pushHistory(state: GraphState): Partial<GraphState> {
+  const positions = new Map(state.nodes.map((n) => [n.id, n.position]));
   return {
-    past: [...state.past, { nodes: state.kgNodes, edges: state.kgEdges }].slice(-50),
+    past: [...state.past, { nodes: state.kgNodes, edges: state.kgEdges, positions }].slice(-50),
     future: [],
   };
 }
@@ -200,14 +201,17 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     // Cannot change source/target — they're structural
     if (key === 'source' || key === 'target') return;
 
-    const edgeIndex = state.edges.findIndex((e) => e.id === edgeId);
-    if (edgeIndex === -1) return;
+    // Find the KG edge by matching the flow edge ID to the KG edge's id
+    const flowEdge = state.edges.find((e) => e.id === edgeId);
+    if (!flowEdge) return;
+    const kgEdgeId = (flowEdge.data?.kg as KGEdge)?.id;
 
-    const kgEdges = state.kgEdges.map((e, i) =>
-      i === edgeIndex ? { ...e, [key]: value } : e,
+    const kgEdges = state.kgEdges.map((e) =>
+      e.id === kgEdgeId ? { ...e, [key]: value } : e,
     );
-    const edges = state.edges.map((e, i) =>
-      i === edgeIndex ? rebuildFlowEdge(e, kgEdges[i]!) : e,
+    const updatedKG = kgEdges.find((e) => e.id === kgEdgeId);
+    const edges = state.edges.map((e) =>
+      e.id === edgeId && updatedKG ? rebuildFlowEdge(e, updatedKG) : e,
     );
     set({ ...history, kgEdges, edges });
   },
@@ -218,16 +222,18 @@ export const useGraphStore = create<GraphState>((set, get) => ({
 
     if (key === 'source' || key === 'target') return;
 
-    const edgeIndex = state.edges.findIndex((e) => e.id === edgeId);
-    if (edgeIndex === -1) return;
+    const flowEdge = state.edges.find((e) => e.id === edgeId);
+    if (!flowEdge) return;
+    const kgEdgeId = (flowEdge.data?.kg as KGEdge)?.id;
 
-    const kgEdges = state.kgEdges.map((e, i) => {
-      if (i !== edgeIndex) return e;
+    const kgEdges = state.kgEdges.map((e) => {
+      if (e.id !== kgEdgeId) return e;
       const { [key]: _, ...rest } = e;
       return rest as KGEdge;
     });
-    const edges = state.edges.map((e, i) =>
-      i === edgeIndex ? rebuildFlowEdge(e, kgEdges[i]!) : e,
+    const updatedKG = kgEdges.find((e) => e.id === kgEdgeId);
+    const edges = state.edges.map((e) =>
+      e.id === edgeId && updatedKG ? rebuildFlowEdge(e, updatedKG) : e,
     );
     set({ ...history, kgEdges, edges });
   },
@@ -268,14 +274,14 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   addEdge: (edge) => {
     const state = get();
     const history = pushHistory(state);
-    const kgEdges = [...state.kgEdges, edge];
-    const idx = kgEdges.length - 1;
+    const edgeWithId = edge.id ? edge : { ...edge, id: `edge-${edge.source}-${edge.target}-${Date.now()}` };
+    const kgEdges = [...state.kgEdges, edgeWithId];
     const newFlowEdge: Edge = {
-      id: `e-${edge.source}-${edge.target}-${idx}`,
-      source: edge.source,
-      target: edge.target,
+      id: edgeWithId.id!,
+      source: edgeWithId.source,
+      target: edgeWithId.target,
       type: 'kgEdge',
-      data: { kg: edge },
+      data: { kg: edgeWithId },
     };
     set({ ...history, kgEdges, edges: [...state.edges, newFlowEdge] });
   },
@@ -283,11 +289,12 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   deleteEdge: (id) => {
     const state = get();
     const history = pushHistory(state);
-    const edgeIndex = state.edges.findIndex((e) => e.id === id);
+    const flowEdge = state.edges.find((e) => e.id === id);
+    const kgEdgeId = flowEdge ? (flowEdge.data?.kg as KGEdge)?.id : undefined;
     set({
       ...history,
       edges: state.edges.filter((e) => e.id !== id),
-      kgEdges: state.kgEdges.filter((_, i) => i !== edgeIndex),
+      kgEdges: kgEdgeId ? state.kgEdges.filter((e) => e.id !== kgEdgeId) : state.kgEdges,
       selectedEdgeId: state.selectedEdgeId === id ? null : state.selectedEdgeId,
     });
   },
@@ -299,13 +306,13 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     const state = get();
     if (state.past.length === 0) return;
     const previous = state.past[state.past.length - 1]!;
-    const { positions } = computeForceLayout(previous.nodes, previous.edges);
+    const currentPositions = new Map(state.nodes.map((n) => [n.id, n.position]));
     set({
       past: state.past.slice(0, -1),
-      future: [{ nodes: state.kgNodes, edges: state.kgEdges }, ...state.future],
+      future: [{ nodes: state.kgNodes, edges: state.kgEdges, positions: currentPositions }, ...state.future],
       kgNodes: previous.nodes,
       kgEdges: previous.edges,
-      nodes: kgToFlowNodes(previous.nodes, positions),
+      nodes: kgToFlowNodes(previous.nodes, previous.positions),
       edges: kgToFlowEdges(previous.edges),
     });
   },
@@ -314,13 +321,13 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     const state = get();
     if (state.future.length === 0) return;
     const next = state.future[0]!;
-    const { positions } = computeForceLayout(next.nodes, next.edges);
+    const currentPositions = new Map(state.nodes.map((n) => [n.id, n.position]));
     set({
-      past: [...state.past, { nodes: state.kgNodes, edges: state.kgEdges }],
+      past: [...state.past, { nodes: state.kgNodes, edges: state.kgEdges, positions: currentPositions }],
       future: state.future.slice(1),
       kgNodes: next.nodes,
       kgEdges: next.edges,
-      nodes: kgToFlowNodes(next.nodes, positions),
+      nodes: kgToFlowNodes(next.nodes, next.positions),
       edges: kgToFlowEdges(next.edges),
     });
   },

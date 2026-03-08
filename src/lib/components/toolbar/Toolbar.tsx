@@ -1,10 +1,15 @@
 import { useCallback, useRef } from 'react';
 import { Panel, useReactFlow } from '@xyflow/react';
+import { toPng, toSvg } from 'html-to-image';
 import { useGraphStore } from '../../store/graph-store';
 import { useUIStore } from '../../store/ui-store';
 import { serializeKG } from '../../parser/serialize-kg';
 import { parseKG } from '../../parser/parse-kg';
 import { ToolbarButton } from './ToolbarButton';
+
+function useSetError() {
+  return useUIStore((s) => s.setError);
+}
 
 function Divider() {
   return <div className="h-px w-full my-1" style={{ backgroundColor: 'var(--kg-border)' }} />;
@@ -29,6 +34,7 @@ export function Toolbar() {
   const toggleSelectMode = useUIStore((s) => s.toggleSelectMode);
   const selectMode = useUIStore((s) => s.selectMode);
   const theme = useUIStore((s) => s.theme);
+  const setError = useSetError();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExportJSON = useCallback(() => {
@@ -55,6 +61,34 @@ export function Toolbar() {
     URL.revokeObjectURL(url);
   }, [getKnowledgeGraph]);
 
+  const handleExportPNG = useCallback(async () => {
+    const el = document.querySelector('.react-flow') as HTMLElement;
+    if (!el) return;
+    try {
+      const dataUrl = await toPng(el, { cacheBust: true, backgroundColor: theme === 'dark' ? '#18181b' : '#f8fafc' });
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = 'knowledge-graph.png';
+      a.click();
+    } catch (err) {
+      setError(`PNG export failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }, [theme, setError]);
+
+  const handleExportSVG = useCallback(async () => {
+    const el = document.querySelector('.react-flow') as HTMLElement;
+    if (!el) return;
+    try {
+      const dataUrl = await toSvg(el, { cacheBust: true, backgroundColor: theme === 'dark' ? '#18181b' : '#f8fafc' });
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = 'knowledge-graph.svg';
+      a.click();
+    } catch (err) {
+      setError(`SVG export failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }, [theme, setError]);
+
   const handleImport = useCallback(() => {
     fileInputRef.current?.click();
   }, []);
@@ -70,13 +104,13 @@ export function Toolbar() {
           const kg = parseKG(text);
           loadGraph(kg);
         } catch (err) {
-          alert(`Import failed: ${err instanceof Error ? err.message : String(err)}`);
+          setError(`Import failed: ${err instanceof Error ? err.message : String(err)}`);
         }
       };
       reader.readAsText(file);
       e.target.value = '';
     },
-    [loadGraph],
+    [loadGraph, setError],
   );
 
   const handleAddNode = useCallback(() => {
@@ -172,6 +206,20 @@ export function Toolbar() {
           <ToolbarButton onClick={handleExportYAML} label="Export YAML">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+            </svg>
+          </ToolbarButton>
+          <ToolbarButton onClick={handleExportPNG} label="Export PNG">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <path d="M21 15l-5-5L5 21" />
+            </svg>
+          </ToolbarButton>
+          <ToolbarButton onClick={handleExportSVG} label="Export SVG">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <path d="M9 15l2 2 4-4" />
             </svg>
           </ToolbarButton>
 

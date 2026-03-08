@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Panel } from '@xyflow/react';
+import { useReadOnly } from '../KGExplorer';
 import { useGraphStore } from '../../store/graph-store';
 import { useUIStore } from '../../store/ui-store';
 import { getNodeFields, getEdgeFields, type KGNode, type KGEdge } from '../../types';
@@ -72,9 +73,18 @@ function EditableField({
         />
       ) : (
         <span
+          role="button"
+          tabIndex={0}
           onClick={() => {
             setEditValue(displayStr);
             setEditing(true);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setEditValue(displayStr);
+              setEditing(true);
+            }
           }}
           className="flex-1 min-w-0 kg-text-secondary truncate cursor-text hover:text-[var(--kg-text)]"
         >
@@ -87,8 +97,10 @@ function EditableField({
       )}
       {!readOnlyKey && (
         <button
+          type="button"
           onClick={() => onDelete(fieldKey)}
-          className="opacity-0 group-hover:opacity-100 kg-text-faint hover:text-red-400 transition-all shrink-0"
+          aria-label={`Delete ${fieldKey}`}
+          className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 kg-text-faint hover:text-red-400 transition-all shrink-0"
           title={`Delete "${fieldKey}"`}
         >
           <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -297,6 +309,7 @@ export function PropertiesPanel() {
   const addEdge = useGraphStore((s) => s.addEdge);
   const deleteEdge = useGraphStore((s) => s.deleteEdge);
 
+  const readOnly = useReadOnly();
   const [viewMode, setViewMode] = useState<'fields' | 'json'>('fields');
 
   const selectedNode = selectedNodeId ? kgNodes.find((n) => n.id === selectedNodeId) : null;
@@ -344,7 +357,7 @@ export function PropertiesPanel() {
 
   return (
     <Panel position="top-right" className="!m-3">
-      <div className="w-72 max-h-[calc(100vh-40px)] overflow-y-auto kg-surface border kg-border rounded-lg shadow-xl">
+      <div className="w-72 max-h-[calc(100vh-40px)] overflow-y-auto kg-surface border kg-border rounded-lg shadow-xl" role="region" aria-label="Properties panel">
         {/* Header */}
         <div
           className="px-4 py-3 border-b kg-surface sticky top-0 z-10 flex items-center justify-between"
@@ -354,6 +367,7 @@ export function PropertiesPanel() {
           {hasSelection && (
             <div className="flex rounded-md p-0.5" style={{ backgroundColor: 'var(--kg-input-bg)' }}>
               <button
+                type="button"
                 onClick={() => setViewMode('fields')}
                 className={`text-[10px] font-medium px-2 py-0.5 rounded transition-colors ${
                   viewMode === 'fields'
@@ -365,6 +379,7 @@ export function PropertiesPanel() {
                 Fields
               </button>
               <button
+                type="button"
                 onClick={() => setViewMode('json')}
                 className={`text-[10px] font-medium px-2 py-0.5 rounded font-mono transition-colors ${
                   viewMode === 'json'
@@ -390,6 +405,8 @@ export function PropertiesPanel() {
               <SectionDivider />
               <div className="px-4 py-3">
                 <button
+                  type="button"
+                  aria-label="Delete node"
                   onClick={() => deleteNode(selectedNodeId!)}
                   className="w-full text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 py-1.5 rounded transition-colors"
                 >
@@ -414,38 +431,45 @@ export function PropertiesPanel() {
                     value={value}
                     onUpdate={(k, v) => updateNodeField(selectedNodeId!, k, v)}
                     onDelete={(k) => deleteNodeField(selectedNodeId!, k)}
+                    readOnlyKey={readOnly}
                   />
                 ))}
               </div>
 
-              <SectionDivider />
-              <div className="px-4 py-2">
-                <div className="text-[10px] kg-text-faint uppercase tracking-wider font-medium mb-1">Add Field</div>
-                <AddFieldRow onAdd={(k, v) => updateNodeField(selectedNodeId!, k, v)} />
-              </div>
+              {!readOnly && (
+                <>
+                  <SectionDivider />
+                  <div className="px-4 py-2">
+                    <div className="text-[10px] kg-text-faint uppercase tracking-wider font-medium mb-1">Add Field</div>
+                    <AddFieldRow onAdd={(k, v) => updateNodeField(selectedNodeId!, k, v)} />
+                  </div>
 
-              <SectionDivider />
-              <div className="px-4 py-2">
-                <div className="text-[10px] kg-text-faint uppercase tracking-wider font-medium mb-1">Connect To</div>
-                <ConnectToRow
-                  currentNodeId={selectedNodeId!}
-                  allNodes={kgNodes}
-                  existingEdges={kgEdges}
-                  onConnect={(targetId) =>
-                    addEdge({ source: selectedNodeId!, target: targetId, type: 'RELATED_TO' })
-                  }
-                />
-              </div>
+                  <SectionDivider />
+                  <div className="px-4 py-2">
+                    <div className="text-[10px] kg-text-faint uppercase tracking-wider font-medium mb-1">Connect To</div>
+                    <ConnectToRow
+                      currentNodeId={selectedNodeId!}
+                      allNodes={kgNodes}
+                      existingEdges={kgEdges}
+                      onConnect={(targetId) =>
+                        addEdge({ source: selectedNodeId!, target: targetId, type: 'RELATED_TO' })
+                      }
+                    />
+                  </div>
 
-              <SectionDivider />
-              <div className="px-4 py-3">
-                <button
-                  onClick={() => deleteNode(selectedNodeId!)}
-                  className="w-full text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 py-1.5 rounded transition-colors"
-                >
-                  Delete Node
-                </button>
-              </div>
+                  <SectionDivider />
+                  <div className="px-4 py-3">
+                    <button
+                      type="button"
+                      aria-label="Delete node"
+                      onClick={() => deleteNode(selectedNodeId!)}
+                      className="w-full text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 py-1.5 rounded transition-colors"
+                    >
+                      Delete Node
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           )
         ) : selectedKGEdge ? (
@@ -455,6 +479,8 @@ export function PropertiesPanel() {
               <SectionDivider />
               <div className="px-4 py-3">
                 <button
+                  type="button"
+                  aria-label="Delete edge"
                   onClick={() => deleteEdge(selectedEdgeId!)}
                   className="w-full text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 py-1.5 rounded transition-colors"
                 >
@@ -483,25 +509,32 @@ export function PropertiesPanel() {
                     value={value}
                     onUpdate={(k, v) => updateEdgeField(selectedEdgeId!, k, v)}
                     onDelete={(k) => deleteEdgeField(selectedEdgeId!, k)}
+                    readOnlyKey={readOnly}
                   />
                 ))}
               </div>
 
-              <SectionDivider />
-              <div className="px-4 py-2">
-                <div className="text-[10px] kg-text-faint uppercase tracking-wider font-medium mb-1">Add Field</div>
-                <AddFieldRow onAdd={(k, v) => updateEdgeField(selectedEdgeId!, k, v)} />
-              </div>
+              {!readOnly && (
+                <>
+                  <SectionDivider />
+                  <div className="px-4 py-2">
+                    <div className="text-[10px] kg-text-faint uppercase tracking-wider font-medium mb-1">Add Field</div>
+                    <AddFieldRow onAdd={(k, v) => updateEdgeField(selectedEdgeId!, k, v)} />
+                  </div>
 
-              <SectionDivider />
-              <div className="px-4 py-3">
-                <button
-                  onClick={() => deleteEdge(selectedEdgeId!)}
-                  className="w-full text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 py-1.5 rounded transition-colors"
-                >
-                  Delete Edge
-                </button>
-              </div>
+                  <SectionDivider />
+                  <div className="px-4 py-3">
+                    <button
+                      type="button"
+                      aria-label="Delete edge"
+                      onClick={() => deleteEdge(selectedEdgeId!)}
+                      className="w-full text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 py-1.5 rounded transition-colors"
+                    >
+                      Delete Edge
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           )
         ) : null}

@@ -10,6 +10,7 @@ export interface UIState {
   selectMode: boolean;
   searchQuery: string;
   highlightedNodeIds: Set<string>;
+  error: string | null;
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
   toggleProperties: () => void;
@@ -18,6 +19,7 @@ export interface UIState {
   toggleSelectMode: () => void;
   setSearchQuery: (q: string) => void;
   setHighlightedNodeIds: (ids: Set<string>) => void;
+  setError: (error: string | null) => void;
 }
 
 function getInitialTheme(): Theme {
@@ -37,6 +39,7 @@ export const useUIStore = create<UIState>((set) => ({
   selectMode: false,
   searchQuery: '',
   highlightedNodeIds: new Set(),
+  error: null,
 
   setTheme: (theme) => {
     localStorage.setItem('kg-theme', theme);
@@ -54,4 +57,5 @@ export const useUIStore = create<UIState>((set) => ({
   toggleSelectMode: () => set((s) => ({ selectMode: !s.selectMode })),
   setSearchQuery: (q) => set({ searchQuery: q }),
   setHighlightedNodeIds: (ids) => set({ highlightedNodeIds: ids }),
+  setError: (error) => set({ error }),
 }));

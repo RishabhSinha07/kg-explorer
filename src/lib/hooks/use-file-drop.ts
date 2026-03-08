@@ -1,9 +1,11 @@
 import { useEffect, useCallback } from 'react';
 import { parseKG } from '../parser/parse-kg';
 import { useGraphStore } from '../store/graph-store';
+import { useUIStore } from '../store/ui-store';
 
 export function useFileDrop() {
   const loadGraph = useGraphStore((s) => s.loadGraph);
+  const setError = useUIStore((s) => s.setError);
 
   const handleDrop = useCallback(
     (e: DragEvent) => {
@@ -18,12 +20,12 @@ export function useFileDrop() {
           const kg = parseKG(text);
           loadGraph(kg);
         } catch (err) {
-          alert(`Import failed: ${err instanceof Error ? err.message : String(err)}`);
+          setError(`Import failed: ${err instanceof Error ? err.message : String(err)}`);
         }
       };
       reader.readAsText(file);
     },
-    [loadGraph],
+    [loadGraph, setError],
   );
 
   const handleDragOver = useCallback((e: DragEvent) => {

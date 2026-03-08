@@ -8,6 +8,8 @@ interface ToolbarButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 export function ToolbarButton({ children, label, disabled, className = '', ...props }: ToolbarButtonProps) {
   return (
     <button
+      type="button"
+      aria-label={label}
       {...props}
       disabled={disabled}
       className={`

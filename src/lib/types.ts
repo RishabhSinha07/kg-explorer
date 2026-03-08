@@ -20,7 +20,7 @@ export const KnowledgeGraphSchema = z.object({
 // --- Types ---
 
 export type KGNode = { id: string; [key: string]: unknown };
-export type KGEdge = { source: string; target: string; [key: string]: unknown };
+export type KGEdge = { source: string; target: string; id?: string; [key: string]: unknown };
 export type KnowledgeGraph = { nodes: KGNode[]; edges: KGEdge[] };
 
 // Input types are the same (everything beyond id/source/target is optional)
@@ -31,6 +31,7 @@ export type KnowledgeGraphInput = { nodes: KGNodeInput[]; edges?: KGEdgeInput[] 
 export interface HistoryEntry {
   nodes: KGNode[];
   edges: KGEdge[];
+  positions: Map<string, { x: number; y: number }>;
 }
 
 // --- Helpers ---

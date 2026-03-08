@@ -18,6 +18,8 @@ import {
 import '@xyflow/react/dist/style.css';
 import { KGNode } from './KGNode';
 import { KGEdge } from './KGEdge';
+import { EmptyState } from '../EmptyState';
+import { useReadOnly } from '../KGExplorer';
 import { useGraphStore } from '../../store/graph-store';
 import { useUIStore } from '../../store/ui-store';
 
@@ -27,6 +29,9 @@ const edgeTypes = { kgEdge: KGEdge };
 export function Canvas() {
   const nodes = useGraphStore((s) => s.nodes);
   const edges = useGraphStore((s) => s.edges);
+  const kgNodeCount = useGraphStore((s) => s.kgNodes.length);
+  const isEmpty = kgNodeCount === 0;
+  const readOnly = useReadOnly();
   const setNodes = useGraphStore((s) => s.setNodes);
   const setEdges = useGraphStore((s) => s.setEdges);
   const selectNode = useGraphStore((s) => s.selectNode);
@@ -51,21 +56,23 @@ export function Canvas() {
 
   const onNodesChange: OnNodesChange = useCallback(
     (changes) => {
-      setNodes(applyNodeChanges(changes, nodes));
+      const currentNodes = useGraphStore.getState().nodes;
+      setNodes(applyNodeChanges(changes, currentNodes));
       for (const change of changes) {
         if (change.type === 'position' && change.position && !change.dragging) {
           updateNodePosition(change.id, change.position);
         }
       }
     },
-    [nodes, setNodes, updateNodePosition],
+    [setNodes, updateNodePosition],
   );
 
   const onEdgesChange: OnEdgesChange = useCallback(
     (changes) => {
-      setEdges(applyEdgeChanges(changes, edges));
+      const currentEdges = useGraphStore.getState().edges;
+      setEdges(applyEdgeChanges(changes, currentEdges));
     },
-    [edges, setEdges],
+    [setEdges],
   );
 
   const onConnect: OnConnect = useCallback(
@@ -103,12 +110,14 @@ export function Canvas() {
   const proOptions = useMemo(() => ({ hideAttribution: true }), []);
 
   return (
+    <>
+    {isEmpty && <EmptyState />}
     <ReactFlow
       nodes={nodes}
       edges={edges}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
-      onConnect={onConnect}
+      onConnect={readOnly ? undefined : onConnect}
       onNodeClick={onNodeClick}
       onEdgeClick={onEdgeClick}
       onPaneClick={onPaneClick}
@@ -116,6 +125,8 @@ export function Canvas() {
       edgeTypes={edgeTypes}
       defaultEdgeOptions={defaultEdgeOptions}
       proOptions={proOptions}
+      nodesConnectable={!readOnly}
+      nodesDraggable={!readOnly}
       fitView
       fitViewOptions={{ padding: 0.3 }}
       minZoom={0.1}
@@ -152,5 +163,6 @@ export function Canvas() {
         zoomable
       />
     </ReactFlow>
+    </>
   );
 }
