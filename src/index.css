@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+/* ---- Theme tokens ---- */
+:root,
+[data-theme="dark"] {
+  --kg-bg: #09090b;
+  --kg-bg-subtle: #18181b;
+  --kg-surface: rgba(24, 24, 27, 0.95);
+  --kg-surface-hover: #27272a;
+  --kg-surface-deep: #09090b;
+  --kg-border: rgba(63, 63, 70, 0.6);
+  --kg-border-strong: #52525b;
+  --kg-text: #fafafa;
+  --kg-text-secondary: #a1a1aa;
+  --kg-text-muted: #71717a;
+  --kg-text-faint: #52525b;
+  --kg-input-bg: #27272a;
+  --kg-input-border: #3f3f46;
+  --kg-dots: #27272a;
+  --kg-edge: #52525b;
+  --kg-minimap-mask: rgba(0, 0, 0, 0.7);
+  --kg-scrollbar: #3f3f46;
+  --kg-scrollbar-hover: #52525b;
+  --kg-node-selected-border: rgba(255, 255, 255, 0.4);
+  --kg-node-selected-ring: rgba(255, 255, 255, 0.2);
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --kg-bg: #f8fafc;
+  --kg-bg-subtle: #f1f5f9;
+  --kg-surface: rgba(255, 255, 255, 0.95);
+  --kg-surface-hover: #e2e8f0;
+  --kg-surface-deep: #ffffff;
+  --kg-border: rgba(203, 213, 225, 0.8);
+  --kg-border-strong: #94a3b8;
+  --kg-text: #0f172a;
+  --kg-text-secondary: #475569;
+  --kg-text-muted: #64748b;
+  --kg-text-faint: #94a3b8;
+  --kg-input-bg: #f1f5f9;
+  --kg-input-border: #cbd5e1;
+  --kg-dots: #e2e8f0;
+  --kg-edge: #94a3b8;
+  --kg-minimap-mask: rgba(248, 250, 252, 0.7);
+  --kg-scrollbar: #cbd5e1;
+  --kg-scrollbar-hover: #94a3b8;
+  --kg-node-selected-border: rgba(99, 102, 241, 0.6);
+  --kg-node-selected-ring: rgba(99, 102, 241, 0.2);
+  color-scheme: light;
+}
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background-color: var(--kg-bg);
+  color: var(--kg-text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+/* React Flow overrides */
+.react-flow__attribution {
+  display: none !important;
+}
+.react-flow__minimap {
+  border-radius: 8px !important;
+}
+.react-flow__controls {
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--kg-scrollbar); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--kg-scrollbar-hover); }
+
+/* ---- Theme utility classes ---- */
+.kg-surface {
+  background-color: var(--kg-surface);
+  backdrop-filter: blur(8px);
+}
+.kg-surface-deep {
+  background-color: var(--kg-surface-deep);
+}
+.kg-border {
+  border-color: var(--kg-border);
+}
+.kg-border-strong {
+  border-color: var(--kg-border-strong);
+}
+.kg-text {
+  color: var(--kg-text);
+}
+.kg-text-secondary {
+  color: var(--kg-text-secondary);
+}
+.kg-text-muted {
+  color: var(--kg-text-muted);
+}
+.kg-text-faint {
+  color: var(--kg-text-faint);
+}
+.kg-input {
+  background-color: var(--kg-input-bg);
+  border-color: var(--kg-input-border);
+  color: var(--kg-text);
+}
+.kg-input:focus {
+  border-color: #6366f1;
+}
+.kg-hover:hover {
+  background-color: var(--kg-surface-hover);
+}
