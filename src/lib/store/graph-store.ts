@@ -52,7 +52,7 @@ export interface GraphState {
   past: HistoryEntry[];
   future: HistoryEntry[];
 
-  loadGraph: (kg: KnowledgeGraph) => void;
+  loadGraph: (kg: KnowledgeGraph, savedPositions?: Map<string, { x: number; y: number }>) => void;
   applyLayout: () => void;
   selectNode: (id: string | null) => void;
   selectEdge: (id: string | null) => void;
@@ -113,8 +113,8 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   past: [],
   future: [],
 
-  loadGraph: (kg) => {
-    const { positions } = computeForceLayout(kg.nodes, kg.edges);
+  loadGraph: (kg, savedPositions) => {
+    const positions = savedPositions ?? computeForceLayout(kg.nodes, kg.edges).positions;
     const nodes = kgToFlowNodes(kg.nodes, positions);
     const edges = kgToFlowEdges(kg.edges);
     set({

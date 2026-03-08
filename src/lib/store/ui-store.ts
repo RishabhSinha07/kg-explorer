@@ -11,6 +11,7 @@ export interface UIState {
   searchQuery: string;
   highlightedNodeIds: Set<string>;
   error: string | null;
+  hiddenTypes: Set<string>;
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
   toggleProperties: () => void;
@@ -20,6 +21,7 @@ export interface UIState {
   setSearchQuery: (q: string) => void;
   setHighlightedNodeIds: (ids: Set<string>) => void;
   setError: (error: string | null) => void;
+  toggleTypeFilter: (type: string) => void;
 }
 
 function getInitialTheme(): Theme {
@@ -40,6 +42,7 @@ export const useUIStore = create<UIState>((set) => ({
   searchQuery: '',
   highlightedNodeIds: new Set(),
   error: null,
+  hiddenTypes: new Set(),
 
   setTheme: (theme) => {
     localStorage.setItem('kg-theme', theme);
@@ -58,4 +61,11 @@ export const useUIStore = create<UIState>((set) => ({
   setSearchQuery: (q) => set({ searchQuery: q }),
   setHighlightedNodeIds: (ids) => set({ highlightedNodeIds: ids }),
   setError: (error) => set({ error }),
+  toggleTypeFilter: (type) =>
+    set((s) => {
+      const next = new Set(s.hiddenTypes);
+      if (next.has(type)) next.delete(type);
+      else next.add(type);
+      return { hiddenTypes: next };
+    }),
 }));

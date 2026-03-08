@@ -11,6 +11,8 @@ import { useUIStore } from '../store/ui-store';
 import { useKeyboardShortcuts } from '../hooks/use-keyboard';
 import { useFileDrop } from '../hooks/use-file-drop';
 import { useBeforeUnload } from '../hooks/use-before-unload';
+import { useAutoSave } from '../hooks/use-auto-save';
+import { useShareableUrl } from '../hooks/use-shareable-url';
 import { parseKG } from '../parser/parse-kg';
 import type { KnowledgeGraph, KnowledgeGraphInput } from '../types';
 import { KnowledgeGraphSchema } from '../types';
@@ -39,6 +41,8 @@ function KGExplorerInner({ data, height = '100vh', width = '100%', onChange, rea
   useKeyboardShortcuts();
   useFileDrop();
   useBeforeUnload();
+  useAutoSave(!!data);
+  useShareableUrl();
 
   // Fire onChange when graph mutates
   useEffect(() => {

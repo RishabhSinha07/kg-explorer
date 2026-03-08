@@ -19,9 +19,11 @@ import '@xyflow/react/dist/style.css';
 import { KGNode } from './KGNode';
 import { KGEdge } from './KGEdge';
 import { EmptyState } from '../EmptyState';
+import { TypeFilter } from '../panels/TypeFilter';
 import { useReadOnly } from '../KGExplorer';
 import { useGraphStore } from '../../store/graph-store';
 import { useUIStore } from '../../store/ui-store';
+import { getNodeType, type KGNode as KGNodeType } from '../../types';
 
 const nodeTypes = { kgNode: KGNode };
 const edgeTypes = { kgEdge: KGEdge };
@@ -40,6 +42,26 @@ export function Canvas() {
   const updateNodePosition = useGraphStore((s) => s.updateNodePosition);
   const theme = useUIStore((s) => s.theme);
   const selectMode = useUIStore((s) => s.selectMode);
+  const hiddenTypes = useUIStore((s) => s.hiddenTypes);
+
+  // Filter nodes/edges based on hidden types
+  const filteredNodes = useMemo(() => {
+    if (hiddenTypes.size === 0) return nodes;
+    return nodes.filter((n) => {
+      const kg = n.data?.kg as KGNodeType | undefined;
+      return kg ? !hiddenTypes.has(getNodeType(kg)) : true;
+    });
+  }, [nodes, hiddenTypes]);
+
+  const visibleNodeIds = useMemo(() => {
+    if (hiddenTypes.size === 0) return null; // no filtering
+    return new Set(filteredNodes.map((n) => n.id));
+  }, [filteredNodes, hiddenTypes]);
+
+  const filteredEdges = useMemo(() => {
+    if (!visibleNodeIds) return edges;
+    return edges.filter((e) => visibleNodeIds.has(e.source) && visibleNodeIds.has(e.target));
+  }, [edges, visibleNodeIds]);
 
   const defaultEdgeOptions = useMemo(
     () => ({
@@ -113,8 +135,8 @@ export function Canvas() {
     <>
     {isEmpty && <EmptyState />}
     <ReactFlow
-      nodes={nodes}
-      edges={edges}
+      nodes={filteredNodes}
+      edges={filteredEdges}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       onConnect={readOnly ? undefined : onConnect}
@@ -150,6 +172,7 @@ export function Canvas() {
           borderColor: 'var(--kg-border)',
         }}
       />
+      <TypeFilter />
       <MiniMap
         nodeStrokeColor="var(--kg-border)"
         nodeColor={(n) => (n.data?.color as string) ?? '#64748b'}

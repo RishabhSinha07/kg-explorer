@@ -396,7 +396,7 @@ export function PropertiesPanel() {
 
         {!hasSelection ? (
           <div className="px-4 py-8 text-center">
-            <p className="text-xs kg-text-faint">Select a node or edge to view properties</p>
+            <p className="text-xs kg-text-faint">Select an item or connection to view properties</p>
           </div>
         ) : selectedNode ? (
           viewMode === 'json' ? (
@@ -406,11 +406,11 @@ export function PropertiesPanel() {
               <div className="px-4 py-3">
                 <button
                   type="button"
-                  aria-label="Delete node"
+                  aria-label="Delete item"
                   onClick={() => deleteNode(selectedNodeId!)}
                   className="w-full text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 py-1.5 rounded transition-colors"
                 >
-                  Delete Node
+                  Delete Item
                 </button>
               </div>
             </div>
@@ -446,7 +446,7 @@ export function PropertiesPanel() {
 
                   <SectionDivider />
                   <div className="px-4 py-2">
-                    <div className="text-[10px] kg-text-faint uppercase tracking-wider font-medium mb-1">Connect To</div>
+                    <div className="text-[10px] kg-text-faint uppercase tracking-wider font-medium mb-1">Link To</div>
                     <ConnectToRow
                       currentNodeId={selectedNodeId!}
                       allNodes={kgNodes}
@@ -461,11 +461,11 @@ export function PropertiesPanel() {
                   <div className="px-4 py-3">
                     <button
                       type="button"
-                      aria-label="Delete node"
+                      aria-label="Delete item"
                       onClick={() => deleteNode(selectedNodeId!)}
                       className="w-full text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 py-1.5 rounded transition-colors"
                     >
-                      Delete Node
+                      Delete Item
                     </button>
                   </div>
                 </>
@@ -480,11 +480,11 @@ export function PropertiesPanel() {
               <div className="px-4 py-3">
                 <button
                   type="button"
-                  aria-label="Delete edge"
+                  aria-label="Delete connection"
                   onClick={() => deleteEdge(selectedEdgeId!)}
                   className="w-full text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 py-1.5 rounded transition-colors"
                 >
-                  Delete Edge
+                  Delete Connection
                 </button>
               </div>
             </div>
@@ -526,11 +526,11 @@ export function PropertiesPanel() {
                   <div className="px-4 py-3">
                     <button
                       type="button"
-                      aria-label="Delete edge"
+                      aria-label="Delete connection"
                       onClick={() => deleteEdge(selectedEdgeId!)}
                       className="w-full text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 py-1.5 rounded transition-colors"
                     >
-                      Delete Edge
+                      Delete Connection
                     </button>
                   </div>
                 </>

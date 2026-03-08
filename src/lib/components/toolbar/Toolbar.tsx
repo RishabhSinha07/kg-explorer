@@ -5,6 +5,7 @@ import { useGraphStore } from '../../store/graph-store';
 import { useUIStore } from '../../store/ui-store';
 import { serializeKG } from '../../parser/serialize-kg';
 import { parseKG } from '../../parser/parse-kg';
+import { getShareableUrl } from '../../hooks/use-shareable-url';
 import { ToolbarButton } from './ToolbarButton';
 
 function useSetError() {
@@ -89,6 +90,16 @@ export function Toolbar() {
     }
   }, [theme, setError]);
 
+  const handleShareUrl = useCallback(async () => {
+    try {
+      const url = getShareableUrl();
+      await navigator.clipboard.writeText(url);
+      setError('Link copied to clipboard!');
+    } catch {
+      setError('Failed to copy link');
+    }
+  }, [setError]);
+
   const handleImport = useCallback(() => {
     fileInputRef.current?.click();
   }, []);
@@ -168,7 +179,7 @@ export function Toolbar() {
             )}
           </ToolbarButton>
 
-          <ToolbarButton onClick={handleAddNode} label="Add Node">
+          <ToolbarButton onClick={handleAddNode} label="Add Item">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="9" />
               <line x1="12" y1="8" x2="12" y2="16" />
@@ -220,6 +231,15 @@ export function Toolbar() {
               <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
               <polyline points="14 2 14 8 20 8" />
               <path d="M9 15l2 2 4-4" />
+            </svg>
+          </ToolbarButton>
+          <ToolbarButton onClick={handleShareUrl} label="Copy Share Link">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="18" cy="5" r="3" />
+              <circle cx="6" cy="12" r="3" />
+              <circle cx="18" cy="19" r="3" />
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
             </svg>
           </ToolbarButton>
 
