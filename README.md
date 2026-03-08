@@ -4,6 +4,10 @@ Interactive knowledge graph explorer. Drop in any JSON or YAML knowledge graph a
 
 **Live demo:** [kg-explorer-umber.vercel.app](https://kg-explorer-umber.vercel.app)
 
+## Demo
+
+https://github.com/user-attachments/assets/f20b4494-a43b-4430-934a-c5cf8396b5b9
+
 ## Features
 
 - **Universal parser** — accepts any JSON/YAML structure with nodes and edges. Supports `id`/`name`, `source`/`target`/`from`/`to`, nested categories, and more
